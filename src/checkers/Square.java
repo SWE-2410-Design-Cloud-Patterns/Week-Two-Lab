@@ -1,3 +1,10 @@
+/*
+ * Course: SWE2410
+ * Fall 2024
+ * Lab 2 - Checkers Redux
+ * Name: Jawadul Chowdhury
+ * Submission Date: 9/16/24
+ */
 package checkers;
 
 import javafx.scene.paint.Color;

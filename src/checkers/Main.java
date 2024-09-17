@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 
 /**
  * Standard template to launch the app.
- *
  * See BoardController for the main code.
  */
 public class Main extends Application {

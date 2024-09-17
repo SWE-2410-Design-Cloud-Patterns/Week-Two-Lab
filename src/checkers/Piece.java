@@ -1,9 +1,9 @@
 /*
  * Course: SWE2410
  * Fall 2024
- * Lab 1 - Checkers
+ * Lab 2 - Checkers Redux
  * Name: Jawadul Chowdhury
- * Submission Date: 9/8/24
+ * Submission Date: 9/16/24
  */
 package checkers;
 
@@ -15,6 +15,8 @@ import javafx.scene.shape.Ellipse;
  */
 public class Piece {
 
+    private int x;
+    private int y;
     private static final float SET_RADIUS_X = 25.0f;
     private static final float SET_RADIUS_Y = 12.0f;
     private static final int PIXEL_DISTANCE = 10;
@@ -29,15 +31,15 @@ public class Piece {
          */
         RED, BLACK
     }
+
     private final Type type;
+    private PieceBehaviorStrategy pieceBehaviorStrategy;
 
     /**
      * The position of the piece on the board, where (0,0) is the top left corner
      * position, (BoardController.BOARD_WIDTH-1,0) is the top right corner
      * and (BOARD_WIDTH-1,BOARD_WIDTH-1) is the bottom right corner.
      */
-    private int x;
-    private int y;
     private final Ellipse ellipse;
     private final Ellipse kingEllipse;
 
@@ -53,6 +55,12 @@ public class Piece {
         this.type = type;
         this.x = x;
         this.y = y;
+        if(type.equals(Type.RED)) {
+            pieceBehaviorStrategy = new RedPieceBehavior();
+        }
+        if(type.equals(Type.BLACK)) {
+            pieceBehaviorStrategy = new BlackPieceBehavior();
+        }
         ellipse = createEllipse();
         kingEllipse = createEllipse();
         kingEllipse.setVisible(false);
@@ -78,6 +86,12 @@ public class Piece {
         kingEllipse.setVisible(false);
         reposition();
         BoardController.getSquare(x, y).placePiece(this);
+        if(type.equals(Type.RED)) {
+            pieceBehaviorStrategy = new RedPieceBehavior();
+        }
+        if(type.equals(Type.BLACK)) {
+            pieceBehaviorStrategy = new BlackPieceBehavior();
+        }
 
     }
 
@@ -178,16 +192,18 @@ public class Piece {
             this.isKing = true;
             kingEllipse.setVisible(true);
             BoardController.setMessage("The Black Piece is now a King");
+            pieceBehaviorStrategy = new KingPieceBehavior();
         } else if(type.equals(Type.RED) && y == END_OF_BOARD_Y_VALUE) {
             this.isKing = true;
             kingEllipse.setVisible(true);
             BoardController.setMessage("The Red Piece is now a King");
+            pieceBehaviorStrategy = new KingPieceBehavior();
         }
     }
 
     private void placeOnSquare(Square square) {
-        this.x = square.getX();
-        this.y = square.getY();
+        x = square.getX();
+        y = square.getY();
         BoardController.getSquare(x, y).placePiece(this);
         reposition();
     }
@@ -226,19 +242,7 @@ public class Piece {
      * @throws IllegalStateException IllegalStateException
      */
     public boolean isValidOrdinaryMove(Square square) {
-        if(isKing) {
-            return Math.abs(square.getY() - y) == 1 &&
-                    Math.abs(square.getX() - x) == 1;
-        }
-        if(type.equals(Type.BLACK)) {
-            return square.getY() == y - 1 &&
-                    Math.abs(square.getX()-x) == 1;
-        } else if(type.equals(Type.RED)){
-            return square.getY() == y + 1 &&
-                    Math.abs(square.getX()-x) == 1;
-        } else {
-            throw new IllegalStateException("This piece has an unknown type:"+type);
-        }
+        return pieceBehaviorStrategy.isValidOrdinaryMove(square, this);
     }
 
 
@@ -263,36 +267,21 @@ public class Piece {
      * @throws IllegalStateException IllegalStateException
      */
     public Piece getCapturedPiece(Square square) {
-        if(isKing) {
-            if(square.getY() == y - 2 && Math.abs(square.getX() - x) == 2 ||
-                    square.getY() == y + 2 && Math.abs(square.getX() - x) == 2) {
-                return getMiddlePiece(square);
-            }
-        }
-
-        if(type.equals(Type.BLACK)) {
-            if (!((square.getY() == y - 2 &&
-                    Math.abs(square.getX()-x) == 2))) {
-                return null;
-            } else {
-                return getMiddlePiece(square);
-            }
-        } else if(type.equals(Type.RED)) {
-            if (!((square.getY() == y + 2 &&
-                    Math.abs(square.getX()-x) == 2))) {
-                return null;
-            } else {
-                return getMiddlePiece(square);
-            }
-        } else {
-            throw new IllegalStateException("This piece has an unknown type:"+type);
-        }
+        return pieceBehaviorStrategy.getCapturedPiece(square, this);
     }
 
     private Piece getMiddlePiece(Square square) {
         int middleX = (square.getX() + x) / 2;
         int middleY = (square.getY() + y) / 2;
         return BoardController.getSquare(middleX, middleY).getPiece();
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public int getY() {
+        return this.y;
     }
 }
 
